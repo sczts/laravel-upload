@@ -2,6 +2,7 @@
 
 namespace Sczts\Upload\Services;
 
+use Illuminate\Http\UploadedFile;
 use Qiniu\Auth;
 use Qiniu\Storage\UploadManager;
 use Illuminate\Support\Facades\Cache;
@@ -41,15 +42,20 @@ class QiniuService
         });
     }
 
-    public static function upload($key, $file)
+    public static function upload($key, UploadedFile $file)
     {
         $token = self::getUploadToken();
         $config = self::getConfig();
+
+        $ext = $file->extension();
+        if(!in_array($ext,$config['allowed_ext'])){
+            throw new UploadException("the $ext not in allowed_ext");
+        }
         $manager = new UploadManager();
         // 调用 UploadManager 的 putFile 方法进行文件的上传。
         list($result, $error) = $manager->putFile($token, $key, $file);
         if (empty($error)) {
-            $result = ['file' => $config['domain'] . '/' . $result['file']];
+            $result = ['file' => $config['domain'] . '/' . $result['file'] . '.' . $file->extension()];
             return $result;
         } else {
             throw new UploadException($error);

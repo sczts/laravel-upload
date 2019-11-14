@@ -17,9 +17,11 @@ class UploadProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
         //发布配置文件到项目的 config 目录中
+        $path = realpath(__DIR__.'/../../config/upload.php');
         $this->publishes([
-            __DIR__ . '../../config/upload.php' => config_path('upload.php'),
+            $path => config_path('upload.php'),
         ]);
     }
 
