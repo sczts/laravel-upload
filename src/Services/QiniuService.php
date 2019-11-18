@@ -4,30 +4,28 @@ namespace Sczts\Upload\Services;
 
 use Illuminate\Http\UploadedFile;
 use Qiniu\Auth;
+use Qiniu\Etag;
 use Qiniu\Storage\UploadManager;
 use Illuminate\Support\Facades\Cache;
 use Sczts\Upload\Exceptions\UploadException;
+use Sczts\Upload\UploadService;
 
-class QiniuService
+class QiniuService implements UploadService
 {
-    private static $config;
+    private $config;
 
-    public static function getConfig()
+    public function __construct()
     {
-        if (!(static::$config)) {
-            static::$config = config('upload.drivers.qiniu');
-        }
-        return static::$config;
+        $this->config = config('upload.services.qiniu');
     }
 
 
-    public static function getUploadToken()
+    public function getUploadToken()
     {
-        $config = static::getConfig();
-        return Cache::remember('upload_token', 50, function () use ($config) {
-            $accessKey = $config['access_key'];
-            $secretKey = $config['secret_key'];
-            $bucket = $config['bucket'];
+        return Cache::remember('upload_token', 58, function () {
+            $accessKey = $this->config['access_key'];
+            $secretKey = $this->config['secret_key'];
+            $bucket = $this->config['bucket'];
 
             $auth = new Auth($accessKey, $secretKey);
 
@@ -42,20 +40,19 @@ class QiniuService
         });
     }
 
-    public static function upload($key, UploadedFile $file)
+    public function upload(UploadedFile $file): array
     {
         $token = self::getUploadToken();
-        $config = self::getConfig();
 
         $ext = $file->extension();
-        if(!in_array($ext,$config['allowed_ext'])){
-            throw new UploadException("the $ext not in allowed_ext");
-        }
+        $etg = Etag::sum($file->getPath() . '/' . $file->getFilename());
+        $key = $etg[0] . '.' . $ext;
+
         $manager = new UploadManager();
         // 调用 UploadManager 的 putFile 方法进行文件的上传。
         list($result, $error) = $manager->putFile($token, $key, $file);
         if (empty($error)) {
-            $result = ['file' => $config['domain'] . '/' . $result['file'] . '.' . $file->extension()];
+            $result = ['file' => $this->config['domain'] . '/' . $result['file'] . '.' . $file->extension()];
             return $result;
         } else {
             throw new UploadException($error);

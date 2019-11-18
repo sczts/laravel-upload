@@ -8,11 +8,11 @@ return [
             'secret_key' => env('QINIU_SK', ''),
             'bucket' => env('QINIU_BUCKET', ''),
             'domain' => env('QINIU_DOMAIN', ''),
-            'allowed_ext' => [
-                'jpg',
-                'jpeg',
-                'png',
-            ],
         ],
+    ],
+    'allowed_ext' => [
+        'jpg',
+        'jpeg',
+        'png',
     ],
 ];

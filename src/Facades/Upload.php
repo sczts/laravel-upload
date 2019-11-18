@@ -3,7 +3,7 @@
 namespace Sczts\Upload\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Sczts\Upload\Upload;
+use Sczts\Upload\Upload as UploadManager;
 
 /**
  * Class UploadFacade
@@ -11,7 +11,7 @@ use Sczts\Upload\Upload;
  * @method static array upload($file);
  * @see \Sczts\Upload\Upload::class
  */
-class UploadFacade extends Facade
+class Upload extends Facade
 {
     /**
      * 获取组件的注册名称。
@@ -20,6 +20,6 @@ class UploadFacade extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return Upload::class;
+        return UploadManager::class;
     }
 }

@@ -17,9 +17,10 @@ class UploadProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $path = realpath(__DIR__ . '/../../config/upload.php');
         //发布配置文件到项目的 config 目录中
         $this->publishes([
-            __DIR__ . '../../config/upload.php' => config_path('upload.php'),
+            $path => config_path('upload.php'),
         ]);
     }
 
@@ -28,8 +29,16 @@ class UploadProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(Upload::class, function () {
-            return new Upload();
+        $default = config('upload.default');
+        $service = config('upload.services.' . $default . '.service');
+
+        $this->app->bind(
+            'Sczts\Upload\UploadService',
+            $service
+        );
+
+        $this->app->singleton(Upload::class, function ($app) {
+            return new Upload($app->make('Sczts\Upload\UploadService'));
         });
     }
 
