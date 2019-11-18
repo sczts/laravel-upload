@@ -19,3 +19,37 @@
     QINIU_BUCKET=xxxx
     QINIU_DOMAIN=http://cdn.xxxxxxx.com
     ```
+
+4. 使用
+    
+    例 (依赖注入)：
+    ```php
+    use Sczts\Upload\Upload;
+    
+    class CommonController extends Controller
+    {
+        // 上传文件
+        public function upload(Request $request,Upload $upload)
+        {
+            $file = $request->file('file');
+            $data = $upload->upload($file);
+            return $this->json(StatusCode::SUCCESS, $data);
+        }
+    }
+    ```
+    
+    例 (门面)：
+    ```php
+    use Sczts\Upload\Facades\Upload;
+    
+    class CommonController extends Controller
+    {
+        // 上传文件
+        public function upload(Request $request)
+        {
+            $file = $request->file('file');
+            $data = Upload::upload($file);
+            return $this->json(StatusCode::SUCCESS, $data);
+        }
+    }
+    ```
