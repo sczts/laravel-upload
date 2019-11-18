@@ -2,10 +2,15 @@
     "name": "sczts/upload",
     "authors": [
         {
+            "name": "eiixy",
+            "email": "990656271@qq.com"
+        },
+        {
             "name": "yangliang",
             "email": "1034211002@qq.com"
         }
     ],
+    "license": "MIT",
     "require": {
         "qiniu/php-sdk": "^7.2",
         "laravel/framework": "^5.5|^6"
