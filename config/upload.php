@@ -2,7 +2,7 @@
 
 return [
     'default' => env('UPLOAD_DRIVER', ''),
-    'drivers' => [
+    'services' => [
         'qiniu' => [
             'service' => \Sczts\Upload\Services\QiniuService::class,
             'access_key' => env('QINIU_AK', ''),
