@@ -17,20 +17,25 @@ class Upload
     public function upload(UploadedFile $file)
     {
         try {
-//            $allow_ext = config('upload.allowed_ext');
+            $allow_ext = config('upload.allowed_ext');
             $max_size = config('upload.max_size');
             $ext = $file->extension();
             $size = round($file->getSize() / 1024 / 1024, 2);
             if ($size > $max_size) {
                 throw new UploadException($size . 'M超过最大允许值');
             }
-//            if (!in_array($ext, $allow_ext)) {
-//                throw new UploadException('不允许上传后缀为 ' . $ext . ' 的文件');
-//            }
+            if (!in_array($ext, $allow_ext)) {
+                throw new UploadException('不允许上传后缀为 ' . $ext . ' 的文件');
+            }
         } catch (\Exception $exception) {
             throw $exception;
         }
         return $this->service->upload($file);
+    }
+
+    public function fileList($marker,$limit)
+    {
+        return $this->service->fileList($marker,$limit);
     }
 
 

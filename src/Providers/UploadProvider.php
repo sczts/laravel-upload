@@ -42,4 +42,9 @@ class UploadProvider extends ServiceProvider
         });
     }
 
+    public function provides()
+    {
+        return [Upload::class];
+    }
+
 }

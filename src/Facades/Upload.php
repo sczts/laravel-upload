@@ -9,6 +9,7 @@ use Sczts\Upload\Upload as UploadManager;
  * Class UploadFacade
  * @package Sczts\Upload\Facades
  * @method static array upload($file);
+ * @method static array fileList($marker,$limit);
  * @see \Sczts\Upload\Upload::class
  */
 class Upload extends Facade
