@@ -3,6 +3,8 @@
 namespace Sczts\Upload\Services;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Qiniu\Auth;
 use Qiniu\Etag;
 use Qiniu\Storage\BucketManager;
@@ -59,8 +61,10 @@ class QiniuService implements UploadService
         // 调用 UploadManager 的 putFile 方法进行文件的上传。
         list($result, $error) = $manager->putFile($token, $key, $file);
         if (empty($error)) {
-            $result = ['file' => $this->config['domain'] . '/' . $result['file'] . '.' . $file->extension()];
-            return $result;
+            if(Str::endsWith($result['file'],'.tmp')){
+                $url=str_replace('.tmp',".$ext",$result['file']);
+            };
+            return ['file'=>$url];
         } else {
             throw new UploadException($error);
         }
