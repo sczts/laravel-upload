@@ -41,7 +41,8 @@ class QiniuService implements UploadService
             $putPolicy = [
                 'saveKey' => '$(etag)',
                 'returnBody' => json_encode([
-                    'file' => $this->config['domain'].'/$(etag)$(ext)'
+//                    'file' => $this->config['domain'] . '/$(etag)$(ext)'
+                    'file' => $this->config['domain'] . '/$(etag)'
                 ])
             ];
             $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
@@ -61,10 +62,11 @@ class QiniuService implements UploadService
         // 调用 UploadManager 的 putFile 方法进行文件的上传。
         list($result, $error) = $manager->putFile($token, $key, $file);
         if (empty($error)) {
-            if(Str::endsWith($result['file'],'.tmp')){
-                $url=str_replace('.tmp',".$ext",$result['file']);
-            };
-            return ['file'=>$url];
+//            if (Str::endsWith($result['file'], '.tmp')) {
+//                $url = str_replace('.tmp', ".$ext", $result['file']);
+//            };
+//            return ['file' => $url];
+            return $result;
         } else {
             throw new UploadException($error);
         }
@@ -87,13 +89,15 @@ class QiniuService implements UploadService
         // 列举文件
         list($result, $error) = $bucket_manager->listFiles($this->bucket, $prefix, $marker, $limit, $delimiter);
         if (empty($error)) {
-            dd($result);
-            $data=[];
-            foreach ($result['items'] as $key=>$value){
-                $data['items'][$key]['file']=$this->config['domain'].'/'.$value['key'];
-                $data['items'][$key]['size']=round($value['fsize']/1024,2) .'KB';
+
+            $data = [];
+            foreach ($result['items'] as $key => $value) {
+                $data['items'][$key]['name'] = $this->config['domain'] . '/' . $value['key'];
+                $data['items'][$key]['size'] = round($value['fsize'] / 1024, 2) . 'KB';
+                $data['items'][$key]['mimeType'] = $value['mimeType'];
+//                $data['items'][$key]['putTime'] = date('y-m-d H:i:s', $value['putTime']);
             }
-            $data['marker']=$result['marker']?? '';
+            $data['marker'] = $result['marker'] ?? '';
             return $data;
         } else {
             throw new UploadException($error);
