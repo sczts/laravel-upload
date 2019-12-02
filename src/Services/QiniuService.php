@@ -36,17 +36,15 @@ class QiniuService implements UploadService
 
     public function getUploadToken()
     {
-        return Cache::remember('upload_token', 58, function () {
-            $auth = $this->getAuth();
-            $putPolicy = [
-                'saveKey' => '$(etag)$(ext)',
-                'returnBody' => json_encode([
-                    'file' => $this->config['domain'] . '/$(etag)$(ext)'
-                ])
-            ];
-            $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
-            return $upToken;
-        });
+        $auth = $this->getAuth();
+        $putPolicy = [
+            'saveKey' => '$(etag)$(ext)',
+            'returnBody' => json_encode([
+                'file' => $this->config['domain'] . '/$(etag)$(ext)'
+            ])
+        ];
+        $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
+        return $upToken;
     }
 
     public function upload(UploadedFile $file): array
