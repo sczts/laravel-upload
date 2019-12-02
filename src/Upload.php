@@ -33,9 +33,9 @@ class Upload
         return $this->service->upload($file);
     }
 
-    public function fileList($marker,$limit)
+    public function fileList($marker,$limit,$prefix)
     {
-        return $this->service->fileList($marker,$limit);
+        return $this->service->fileList($marker,$limit,$prefix);
     }
 
 

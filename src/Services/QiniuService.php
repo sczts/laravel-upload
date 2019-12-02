@@ -75,14 +75,13 @@ class QiniuService implements UploadService
     /**
      * @param $marker  上次列举返回的位置标记，作为本次列举的起点信息
      * @param $limit  本次列举的条目数
+     * @param $prefix  要列取文件的公共前缀
      * @return mixed
      * @throws UploadException
      */
-    public function fileList(string $marker, int $limit): array
+    public function fileList(string $marker, int $limit, string $prefix): array
     {
         $bucket_manager = new BucketManager($this->getAuth());
-        // 要列取文件的公共前缀
-        $prefix = '';
 
         $delimiter = '/';
 
