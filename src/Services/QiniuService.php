@@ -39,10 +39,9 @@ class QiniuService implements UploadService
         return Cache::remember('upload_token', 58, function () {
             $auth = $this->getAuth();
             $putPolicy = [
-                'saveKey' => '$(etag)',
+                'saveKey' => '$(etag)$(ext)',
                 'returnBody' => json_encode([
-//                    'file' => $this->config['domain'] . '/$(etag)$(ext)'
-                    'file' => $this->config['domain'] . '/$(etag)'
+                    'file' => $this->config['domain'] . '/$(etag)$(ext)'
                 ])
             ];
             $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
@@ -62,11 +61,10 @@ class QiniuService implements UploadService
         // 调用 UploadManager 的 putFile 方法进行文件的上传。
         list($result, $error) = $manager->putFile($token, $key, $file);
         if (empty($error)) {
-//            if (Str::endsWith($result['file'], '.tmp')) {
-//                $url = str_replace('.tmp', ".$ext", $result['file']);
-//            };
-//            return ['file' => $url];
-            return $result;
+            if (Str::endsWith($result['file'], '.tmp')) {
+                $url = str_replace('.tmp', ".$ext", $result['file']);
+            };
+            return ['file' => $url];
         } else {
             throw new UploadException($error);
         }
