@@ -86,16 +86,24 @@ class QiniuService implements UploadService
         if (empty($error)) {
 
             $data = [];
-            foreach ($result['items'] as $key => $value) {
-                $data['items'][$key]['name'] = $this->config['domain'] . '/' . $value['key'];
-                $data['items'][$key]['size'] = round($value['fsize'] / 1024, 2) . 'KB';
-                $data['items'][$key]['mimeType'] = $value['mimeType'];
-//                $data['items'][$key]['putTime'] = date('y-m-d H:i:s', $value['putTime']);
-            }
+            $data['items'] = array_map(function ($value) {
+                $item['name'] = $this->config['domain'] . '/' . $value['key'];
+                $item['size'] = round($value['fsize'] / 1024, 2) . 'KB';
+                $item['mimeType'] = $value['mimeType'];
+                $item['putTime'] = $this->putTimeFormat($value['putTime']);
+                return $item;
+            }, $result['items']);
+
             $data['marker'] = $result['marker'] ?? '';
             return $data;
         } else {
             throw new UploadException($error);
         }
+    }
+
+    protected function putTimeFormat($put_time)
+    {
+        $time_str = substr($put_time, 0, 11);
+        return date('Y-m-d H:i:s', (int)str_replace('.', '', $time_str));
     }
 }
