@@ -103,7 +103,11 @@ class QiniuService implements UploadService
 
     protected function putTimeFormat($put_time)
     {
-        $time_str = substr($put_time, 0, 11);
-        return date('Y-m-d H:i:s', (int)str_replace('.', '', $time_str));
+        if(strpos($put_time,'.')) {
+            $time_str = (int)str_replace('.', '',substr($put_time, 0, 11));
+        }else{
+            $time_str = (int)substr($put_time, 0, 10);
+        }
+        return date('Y-m-d H:i:s', $time_str);
     }
 }
