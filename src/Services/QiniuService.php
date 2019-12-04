@@ -17,11 +17,13 @@ class QiniuService implements UploadService
 {
     private $config;
     private $bucket;
+    private $prefix;
 
     public function __construct()
     {
         $this->config = config('upload.services.qiniu');
         $this->bucket = $this->config['bucket'];
+        $this->prefix =$this->config['prefix'];
     }
 
     public function getAuth()
@@ -38,9 +40,9 @@ class QiniuService implements UploadService
     {
         $auth = $this->getAuth();
         $putPolicy = [
-            'saveKey' => '$(etag)$(ext)',
+            'saveKey' => $this->prefix . '$(etag)$(ext)',
             'returnBody' => json_encode([
-                'file' => $this->config['domain'] . '/$(etag)$(ext)'
+                'file' => $this->config['domain'] . '/' . $this->prefix . '$(etag)$(ext)'
             ])
         ];
         $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
@@ -103,9 +105,9 @@ class QiniuService implements UploadService
 
     protected function putTimeFormat($put_time)
     {
-        if(strpos($put_time,'.')) {
-            $time_str = (int)str_replace('.', '',substr($put_time, 0, 11));
-        }else{
+        if (strpos($put_time, '.')) {
+            $time_str = (int)str_replace('.', '', substr($put_time, 0, 11));
+        } else {
             $time_str = (int)substr($put_time, 0, 10);
         }
         return date('Y-m-d H:i:s', $time_str);
