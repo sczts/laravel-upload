@@ -45,7 +45,8 @@ class QiniuService implements UploadService
         $putPolicy = [
             'saveKey' => $this->prefix . '$(etag)$(ext)',
             'returnBody' => json_encode([
-                'file' => $this->config['domain'] . '/' . $this->prefix . '$(etag)$(ext)'
+                'file' => $this->config['domain'] . '/' . '$(key)',
+                'key' => '$(key)'
             ])
         ];
         $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
@@ -63,18 +64,11 @@ class QiniuService implements UploadService
 
         $ext = $file->extension() == static::SUFFIX_JPEG ? static::SUFFIX_JPG : $file->extension();
         $etg = Etag::sum($file->getPath() . '/' . $file->getFilename());
-        $key = $etg[0] . '.' . $ext;
+        $key = sprintf('%s%s.%s', $this->prefix, array_shift($etg), $ext);
         $manager = new UploadManager();
         // 调用 UploadManager 的 putFile 方法进行文件的上传。
         list($result, $error) = $manager->putFile($token, $key, $file);
-        if (empty($error)) {
-            if (Str::endsWith($result['file'], '.tmp')) {
-                $url = str_replace('.tmp', ".$ext", $result['file']);
-            };
-            return ['file' => $url];
-        } else {
-            throw new UploadException($error);
-        }
+        return static::createBackData($result, $error, $ext);
     }
 
     /**
@@ -119,5 +113,24 @@ class QiniuService implements UploadService
         $put_time = number_format($put_time, 0, '', '');
         $time_str = (int)substr($put_time, 0, 10);
         return Carbon::createFromTimestamp($time_str)->toDateTimeString();
+    }
+
+    /**
+     * 处理返回的数据
+     * @param $result
+     * @param $error
+     * @return array
+     * @throws UploadException
+     */
+    protected static function createBackData($result, $error, string $ext): array
+    {
+        if (empty($error)) {
+            if (Str::endsWith($result['file'], '.tmp')) {
+                $result['file'] = str_replace('.tmp', ".$ext", $result['file']);
+            };
+            return $result;
+        } else {
+            throw new UploadException($error);
+        }
     }
 }
