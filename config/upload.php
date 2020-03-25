@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'default' => env('UPLOAD_DRIVER', ''),
+    'default' => env('UPLOAD_DRIVER', 'qiniu'),
     'services' => [
         'qiniu' => [
             'service' => \Sczts\Upload\Services\QiniuService::class,
@@ -9,7 +9,7 @@ return [
             'secret_key' => env('QINIU_SK', ''),
             'bucket' => env('QINIU_BUCKET', ''),
             'domain' => env('QINIU_DOMAIN', ''),
-            'prefix'=>env('APP_NAME','')
+            'prefix'=>env('UPLOAD_PREFIX','images')
         ],
     ],
     'max_size'=>env('UPLOAD_MAX_SIZE','2'), // 最大上传大小:/M
