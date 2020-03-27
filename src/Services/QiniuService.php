@@ -18,7 +18,7 @@ class QiniuService implements UploadService
 {
     private $config;
     private $bucket;
-    private $prefix;
+    private $default_prefix;
     const SUFFIX_JPEG = 'jpeg';
     const SUFFIX_JPG = 'jpg';
 
@@ -26,7 +26,7 @@ class QiniuService implements UploadService
     {
         $this->config = config('upload.services.qiniu');
         $this->bucket = $this->config['bucket'];
-        $this->prefix = Str::finish($this->config['prefix'], '/');
+        $this->default_prefix = Str::finish($this->config['prefix'], '/');
     }
 
     public function getAuth()
@@ -38,18 +38,23 @@ class QiniuService implements UploadService
         return $auth;
     }
 
-
-    public function getUploadToken()
+    /**
+     * @param string $custom_prefix 自定义前缀
+     * @param int $expire 有效时间  :/秒
+     * @return string  token 值
+     */
+    public function getUploadToken(string $custom_prefix, int $expire): string
     {
         $auth = $this->getAuth();
         $putPolicy = [
-            'saveKey' => $this->prefix . '$(etag)$(ext)',
+            'forceSaveKey' => true,
+            'saveKey' => $this->createPrefix($custom_prefix) . '$(etag)$(ext)',
             'returnBody' => json_encode([
                 'file' => $this->config['domain'] . '/' . '$(key)',
                 'key' => '$(key)'
             ])
         ];
-        $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
+        $upToken = $auth->uploadToken($this->bucket, null, $expire, $putPolicy);
         return $upToken;
     }
 
@@ -58,13 +63,13 @@ class QiniuService implements UploadService
      * @return array
      * @throws UploadException
      */
-    public function upload(UploadedFile $file): array
+    public function upload(UploadedFile $file, string $custom_prefix, int $expire): array
     {
-        $token = self::getUploadToken();
+        $token = self::getUploadToken($custom_prefix,$expire);
 
         $ext = $file->extension() == static::SUFFIX_JPEG ? static::SUFFIX_JPG : $file->extension();
         $etg = Etag::sum($file->getPath() . '/' . $file->getFilename());
-        $key = sprintf('%s%s.%s', $this->prefix, array_shift($etg), $ext);
+        $key = sprintf('%s%s.%s', $this->createPrefix($custom_prefix), array_shift($etg), $ext);
         $manager = new UploadManager();
         // 调用 UploadManager 的 putFile 方法进行文件的上传。
         list($result, $error) = $manager->putFile($token, $key, $file);
@@ -132,5 +137,13 @@ class QiniuService implements UploadService
         } else {
             throw new UploadException($error);
         }
+    }
+
+    protected function createPrefix(string $custom_prefix): string
+    {
+        if ($custom_prefix) {
+            return Str::finish($this->default_prefix . $custom_prefix, '/');
+        }
+        return $this->default_prefix;
     }
 }

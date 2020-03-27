@@ -8,7 +8,9 @@ use Illuminate\Http\UploadedFile;
 
 interface UploadService
 {
-    public function upload(UploadedFile $file): array;
+    public function getUploadToken(string $custom_prefix, int $expire): string;
 
-    public function fileList(string $marker,int $limit,string $prefix) :array;
+    public function upload(UploadedFile $file, string $custom_prefix, int $expire): array;
+
+    public function fileList(string $marker, int $limit, string $prefix): array;
 }
