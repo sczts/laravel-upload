@@ -5,6 +5,7 @@ namespace Sczts\Upload\Providers;
 
 use Sczts\Upload\Upload;
 use \Illuminate\Support\ServiceProvider;
+use Sczts\Upload\UploadService;
 
 class UploadProvider extends ServiceProvider
 {
@@ -29,17 +30,7 @@ class UploadProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $default = config('upload.default');
-        $service = config('upload.services.' . $default . '.service');
 
-        $this->app->bind(
-            'Sczts\Upload\UploadService',
-            $service
-        );
-
-        $this->app->singleton(Upload::class, function ($app) {
-            return new Upload($app->make('Sczts\Upload\UploadService'));
-        });
     }
 
     public function provides()
