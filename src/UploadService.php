@@ -15,4 +15,5 @@ interface UploadService
     public function uploadToken($returnBody): string;
 
     public function downloadUrl($url, $expires = 3600): string;
+
 }

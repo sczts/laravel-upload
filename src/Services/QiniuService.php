@@ -18,7 +18,7 @@ class QiniuService implements UploadService
 {
     private $config;
     private $bucket;
-    private $prefix;
+    private $default_prefix;
     const SUFFIX_JPEG = 'jpeg';
     const SUFFIX_JPG = 'jpg';
 
@@ -78,7 +78,7 @@ class QiniuService implements UploadService
                 'name' => '$(fname)'
             ], $returnBody))
         ];
-        $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
+        $upToken = $auth->uploadToken($this->bucket, null, $expire, $putPolicy);
         return $upToken;
     }
 
@@ -174,5 +174,13 @@ class QiniuService implements UploadService
         } else {
             throw new UploadException($error);
         }
+    }
+
+    protected function createPrefix(string $custom_prefix): string
+    {
+        if ($custom_prefix) {
+            return Str::finish($this->default_prefix . $custom_prefix, '/');
+        }
+        return $this->default_prefix;
     }
 }
