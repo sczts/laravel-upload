@@ -26,7 +26,7 @@ return [
             'secret_key' => env('QINIU_SK', ''),
             'bucket' => env('QINIU_BUCKET_PRIVATE', ''),
             'domain' => env('QINIU_DOMAIN_PRIVATE', ''),
-            'callback_url' => env('QINIU_CALLBACK_URL', ''),
+            'callback_url' => env('QINIU_CALLBACK_URL_PRIVATE', ''),
         ],
     ],
 
