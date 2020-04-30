@@ -24,7 +24,7 @@ class Upload
     /**
      * 切换上传通道
      * @param $channel
-     * @return mixed
+     * @return Upload
      * @throws UploadException
      */
     public function channel($channel){

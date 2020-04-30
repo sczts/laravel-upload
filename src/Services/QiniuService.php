@@ -65,9 +65,10 @@ class QiniuService implements UploadService
     /**
      * 获取上传配置
      * @param array $returnBody
+     * @param int $expires
      * @return string
      */
-    public function uploadToken($returnBody = []): string
+    public function uploadToken($returnBody = [], $expires = 3600): string
     {
         $auth = $this->getAuth();
         $putPolicy = [
@@ -78,7 +79,7 @@ class QiniuService implements UploadService
                 'name' => '$(fname)'
             ], $returnBody))
         ];
-        $upToken = $auth->uploadToken($this->bucket, null, 3600, $putPolicy);
+        $upToken = $auth->uploadToken($this->bucket, null, $expires, $putPolicy);
         return $upToken;
     }
 
