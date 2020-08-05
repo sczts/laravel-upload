@@ -72,8 +72,8 @@ class Upload
      */
     public function upload(UploadedFile $file, $prefix = "")
     {
-        $allow_ext = config('upload.allowed_ext');
-        $max_size = config('upload.max_size');
+        $allow_ext = $this->settings['allowed_ext'];
+        $max_size = $this->settings['max_size'];
         $ext = $file->extension();
         $size = round($file->getSize() / 1024 / 1024, 2);
         if ($size > $max_size) {

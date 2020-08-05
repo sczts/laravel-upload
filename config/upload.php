@@ -60,6 +60,12 @@ return [
             'jpg',
             'jpeg',
             'png',
+            'xls',
+            'xlsx',
+            'doc',
+            'docx',
+            'ppt',
+            'txt',
         ],
     ]
 ];

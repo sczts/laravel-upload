@@ -68,7 +68,7 @@ class QiniuService implements UploadService
      * @param int $expires
      * @return string
      */
-    public function uploadToken($returnBody = [], $expires = 3600): string
+    public function uploadToken(array $returnBody = [], int $expires = 3600): string
     {
         $auth = $this->getAuth();
         $putPolicy = [
@@ -76,7 +76,8 @@ class QiniuService implements UploadService
             'returnBody' => json_encode(array_merge([
                 'file' => Str::finish($this->config['domain'],'/') . '$(key)',
                 'key' => '$(key)',
-                'name' => '$(fname)'
+                'name' => '$(fname)',
+                'size' => '$(fsize)',
             ], $returnBody))
         ];
         $upToken = $auth->uploadToken($this->bucket, null, $expires, $putPolicy);
@@ -90,7 +91,7 @@ class QiniuService implements UploadService
      * @return array
      * @throws UploadException
      */
-    public function upload(UploadedFile $file, $returnBody = []): array
+    public function upload(UploadedFile $file, array $returnBody = []): array
     {
         $token = self::uploadToken($returnBody);
 
