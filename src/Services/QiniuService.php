@@ -81,14 +81,16 @@ class QiniuService implements UploadService
     public function upload(UploadedFile $file, array $returnBody = []): array
     {
         $token = self::uploadToken($returnBody);
-
-        $ext = $file->extension() == static::SUFFIX_JPEG ? static::SUFFIX_JPG : $file->extension();
+        $ext = $file->getClientOriginalExtension();
         $etg = Etag::sum($file->getPath() . '/' . $file->getFilename());
         $key = sprintf('%s%s.%s', $this->getPrefix(), array_shift($etg), $ext);
         $manager = new UploadManager();
-        // 调用 UploadManager 的 putFile 方法进行文件的上传。
         list($result, $error) = $manager->putFile($token, $key, $file);
-        return static::createBackData($result, $error, $ext);
+        if (!empty($error)) {
+            throw new UploadException($error);
+        }
+        $result['name'] = $file->getClientOriginalName();
+        return $result;
     }
 
     /**
@@ -102,23 +104,4 @@ class QiniuService implements UploadService
         return $this->getAuth()->privateDownloadUrl($url, $expires);
     }
 
-    /**
-     * 处理返回的数据
-     * @param $result
-     * @param $error
-     * @param string $ext
-     * @return array
-     * @throws UploadException
-     */
-    protected static function createBackData($result, $error, string $ext): array
-    {
-        if (empty($error)) {
-            if (Str::endsWith($result['file'], '.tmp')) {
-                $result['file'] = str_replace('.tmp', ".$ext", $result['file']);
-            };
-            return $result;
-        } else {
-            throw new UploadException($error);
-        }
-    }
 }
