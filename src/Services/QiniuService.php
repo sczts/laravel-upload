@@ -3,42 +3,29 @@
 namespace Sczts\Upload\Services;
 
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Qiniu\Auth;
 use Qiniu\Etag;
-use Qiniu\Storage\BucketManager;
 use Qiniu\Storage\UploadManager;
-use Illuminate\Support\Facades\Cache;
 use Sczts\Upload\Exceptions\UploadException;
 use Sczts\Upload\UploadService;
 
 class QiniuService implements UploadService
 {
     private $config;
-    private $bucket;
     private $prefix;
+
     const SUFFIX_JPEG = 'jpeg';
     const SUFFIX_JPG = 'jpg';
 
     public function __construct($config)
     {
         $this->config = $config;
-        $this->bucket = $this->config['bucket'];
     }
 
-
-    /**
-     * 设置前缀，拷贝对象
-     * @param $prefix
-     * @return QiniuService
-     */
     public function setPrefix($prefix)
     {
-        $service = clone $this;
-        $service->prefix = $prefix;
-        return $service;
+        $this->prefix = $prefix;
     }
 
     /**
@@ -48,9 +35,9 @@ class QiniuService implements UploadService
     public function getPrefix()
     {
         if ($this->prefix) {
-            return Str::finish($this->config['prefix'] . '/' . $this->prefix, '/');
+            return Str::finish($this->prefix, '/');
         }
-        return Str::finish($this->config['prefix'], '/');
+        return '';
     }
 
 
@@ -74,13 +61,13 @@ class QiniuService implements UploadService
         $putPolicy = [
             'saveKey' => $this->getPrefix() . '$(etag)$(ext)',
             'returnBody' => json_encode(array_merge([
-                'file' => Str::finish($this->config['domain'],'/') . '$(key)',
+                'file' => Str::finish($this->config['domain'], '/') . '$(key)',
                 'key' => '$(key)',
                 'name' => '$(fname)',
                 'size' => '$(fsize)',
             ], $returnBody))
         ];
-        $upToken = $auth->uploadToken($this->bucket, null, $expires, $putPolicy);
+        $upToken = $auth->uploadToken($this->config['bucket'], null, $expires, $putPolicy);
         return $upToken;
     }
 
@@ -116,53 +103,10 @@ class QiniuService implements UploadService
     }
 
     /**
-     * @param string $marker 上次列举返回的位置标记，作为本次列举的起点信息
-     * @param int $limit 本次列举的条目数
-     * @param string $prefix 要列取文件的公共前缀
-     * @return array
-     * @throws UploadException
-     */
-    public function fileList(string $marker, int $limit, string $prefix): array
-    {
-        $bucket_manager = new BucketManager($this->getAuth());
-
-        $delimiter = '/';
-
-        // 列举文件
-        list($result, $error) = $bucket_manager->listFiles($this->bucket, $prefix, $marker, $limit, $delimiter);
-        if (empty($error)) {
-
-            $data = [];
-            $data['items'] = array_map(function ($value) {
-                $item['name'] = Str::finish($this->config['domain'],'/') . $value['key'];
-                $item['size'] = round($value['fsize'] / 1024, 2) . 'KB';
-                $item['mimeType'] = $value['mimeType'];
-                $item['putTime'] = $this->putTimeFormat($value['putTime']);
-                return $item;
-            }, $result['items']);
-
-            $data['marker'] = $result['marker'] ?? '';
-            return $data;
-        } else {
-            throw new UploadException($error);
-        }
-    }
-
-    /**
-     * @param $put_time // 修改时间  秒/毫秒
-     * @return false|string
-     */
-    protected function putTimeFormat($put_time)
-    {
-        $put_time = number_format($put_time, 0, '', '');
-        $time_str = (int)substr($put_time, 0, 10);
-        return Carbon::createFromTimestamp($time_str)->toDateTimeString();
-    }
-
-    /**
      * 处理返回的数据
      * @param $result
      * @param $error
+     * @param string $ext
      * @return array
      * @throws UploadException
      */

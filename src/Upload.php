@@ -4,6 +4,7 @@ namespace Sczts\Upload;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Sczts\Upload\Exceptions\UploadException;
 
 class Upload
@@ -11,13 +12,15 @@ class Upload
     /**
      * @var UploadService
      */
-    private  $service;
+    private $service;
     private $channels = [];
     private $settings;
+    private $config;
 
     public function __construct()
     {
         $channel = config('upload.default');
+        $this->settings = config('upload.settings');
         $this->channel($channel);
     }
 
@@ -27,16 +30,23 @@ class Upload
      * @return Upload
      * @throws UploadException
      */
-    public function channel($channel){
-        if (!Arr::exists($this->channels,$channel)){
-            $config = config('upload.channels.'.$channel,false);
-            if (!$config){
-                throw new UploadException('上传通道"'.$channel.'"不存在');
+    public function channel($channel)
+    {
+        if (!Arr::exists($this->channels, $channel)) {
+            $config = config('upload.channels.' . $channel, false);
+
+            if (!$config) {
+                throw new UploadException('上传通道"' . $channel . '"不存在');
             }
-            $this->settings = array_merge(config('upload.settings'),$config);
-            $this->channels[$channel] = new $config['service']($this->settings);
+            if (!($config['service'] instanceof UploadService)) {
+                throw new UploadException($config['service'] . ' must instanceof UploadService');
+            }
+            $this->config = $config;
+            $this->channels[$channel] = new $config['service']($config);
         }
         $this->service = $this->channels[$channel];
+        $this->setPrefix();
+
         return $this;
     }
 
@@ -44,16 +54,17 @@ class Upload
     /**
      * 获取上传token
      * @param array $returnBody
+     * @param int $expires
      * @return mixed
      */
-    public function uploadToken($returnBody = [])
+    public function uploadToken($returnBody = [], $expires = 3600)
     {
-        return $this->service->uploadToken($returnBody);
+        return $this->service->uploadToken($returnBody, $expires);
     }
 
 
     /**
-     * 获取下载链接
+     * 获取临时下载链接
      * @param $url
      * @param int $expires
      * @return string
@@ -66,31 +77,43 @@ class Upload
     /**
      * 文件上传
      * @param UploadedFile $file
-     * @param string $prefix
+     * @param array $returnBody
      * @return mixed
      * @throws UploadException
      */
-    public function upload(UploadedFile $file, $prefix = "")
+    public function upload(UploadedFile $file, $returnBody = [])
     {
-        $allow_ext = $this->settings['allowed_ext'];
         $max_size = $this->settings['max_size'];
-        $ext = $file->extension();
         $size = round($file->getSize() / 1024 / 1024, 2);
         if ($size > $max_size) {
             throw new UploadException($size . 'M超过最大允许值');
         }
-        if (!in_array($ext, $allow_ext)) {
+
+        $allow_ext = $this->settings['allowed_ext'];
+        $ext = $file->extension();
+        if (!in_array($ext, $allow_ext) || !in_array('*', $allow_ext)) {
             throw new UploadException('不允许上传后缀为 ' . $ext . ' 的文件');
         }
-        return $this->service->upload($file, $prefix);
+
+        return $this->service->upload($file, $returnBody);
     }
 
-
-
-
-    public function fileList($marker, $limit, $prefix)
+    /**
+     * @param null $prefix
+     * @return $this
+     */
+    public function setPrefix($prefix = null)
     {
-        return $this->service->fileList($marker, $limit, $prefix);
-    }
+        $default = $this->config['prefix'] ?? $this->settings['prefix'] ?? '';
 
+        if ($default != '') {
+            $default = Str::finish($default, '/');
+        }
+        if ($this->settings['append_upload_date']) {
+            $default = $default . date('Ymd') . '/';
+        }
+        $prefix = $default . $prefix;
+        $this->service->setPrefix($prefix);
+        return $this;
+    }
 }

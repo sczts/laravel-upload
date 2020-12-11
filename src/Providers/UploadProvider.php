@@ -5,7 +5,6 @@ namespace Sczts\Upload\Providers;
 
 use Sczts\Upload\Upload;
 use \Illuminate\Support\ServiceProvider;
-use Sczts\Upload\UploadService;
 
 class UploadProvider extends ServiceProvider
 {

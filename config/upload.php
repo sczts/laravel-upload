@@ -38,7 +38,7 @@ return [
         /**
          * 文件上传统一前缀
          */
-        'prefix' => env('UPLOAD_PREFIX', ''),   // 文件前缀
+        'prefix' => env('UPLOAD_PREFIX', null),   // 文件前缀
 
 
         /**
