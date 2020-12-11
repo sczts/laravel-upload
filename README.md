@@ -2,7 +2,7 @@
 
 1. 使用 composer 安装
     ```
-    composer require sczts/upload
+    composer require sczts/laravel-upload
     ```
 
 2. 发布配置文件
@@ -19,7 +19,7 @@
     QINIU_BUCKET=xxxx
     QINIU_DOMAIN=http://cdn.xxxxxxx.com
     ```
-
+    
 4. 使用
     
     例 (依赖注入)：
@@ -53,3 +53,5 @@
         }
     }
     ```
+
+5. 按实际需求修改 `config/upload.php` 配置，可在 `channel` 中覆盖 `settings` 的配置

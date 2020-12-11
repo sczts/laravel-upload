@@ -27,8 +27,9 @@ class Upload
     /**
      * 切换上传通道
      * @param $channel
-     * @return Upload
+     * @return $this
      * @throws UploadException
+     * @throws \ReflectionException
      */
     public function channel($channel)
     {
@@ -38,10 +39,19 @@ class Upload
             if (!$config) {
                 throw new UploadException('上传通道"' . $channel . '"不存在');
             }
-            if (!($config['service'] instanceof UploadService)) {
+
+            $interfaceNames = (new \ReflectionClass($config['service']))->getInterfaceNames();
+            if (!in_array(UploadService::class, $interfaceNames)) {
                 throw new UploadException($config['service'] . ' must instanceof UploadService');
             }
-            $this->config = $config;
+
+            // channel中的配置可覆盖settings的配置
+            foreach ($this->settings as $key => $setting){
+                if (key_exists($key,$config)){
+                    $this->settings[$key] = $config[$key];
+                }
+            }
+
             $this->channels[$channel] = new $config['service']($config);
         }
         $this->service = $this->channels[$channel];
@@ -91,7 +101,7 @@ class Upload
 
         $allow_ext = $this->settings['allowed_ext'];
         $ext = $file->extension();
-        if (!in_array($ext, $allow_ext) || !in_array('*', $allow_ext)) {
+        if (!(in_array($ext, $allow_ext) || in_array('*', $allow_ext))) {
             throw new UploadException('不允许上传后缀为 ' . $ext . ' 的文件');
         }
 
@@ -104,7 +114,7 @@ class Upload
      */
     public function setPrefix($prefix = null)
     {
-        $default = $this->config['prefix'] ?? $this->settings['prefix'] ?? '';
+        $default = $this->settings['prefix'] ?? '';
 
         if ($default != '') {
             $default = Str::finish($default, '/');
